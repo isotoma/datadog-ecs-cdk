@@ -21,8 +21,9 @@
     "types": ["node", "jest"]
   },
   "include": [
-    "index.ts",
-    "handler/"
+    "ec2.ts",
+    "fargate.ts",
+    "index.ts"
   ],
   "exclude": [
       "build/"
