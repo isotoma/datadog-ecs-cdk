@@ -133,7 +133,7 @@ export class DatadogEcsDaemonService extends Construct {
                 ...(props.logs?.enabled
                     ? {
                           DD_LOGS_ENABLED: 'true',
-                          DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL: props.logs.collectFromAllContainers ? 'true' : 'false',
+                          DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL: props.logs.collectFromAllContainers !== false ? 'true' : 'false',
                           ...(!props.logs?.collectFromAgentContainer
                               ? {
                                     DD_CONTAINER_EXCLUDE: 'name:datadog-agent',
