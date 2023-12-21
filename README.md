@@ -4,6 +4,8 @@ Docs: https://isotoma.github.io/datadog-ecs-cdk/
 
 NPM: https://www.npmjs.com/package/datadog-ecs-cdk
 
+Source: https://github.com/isotoma/datadog-ecs-cdk
+
 ## EC2 example
 
 ```typescript
