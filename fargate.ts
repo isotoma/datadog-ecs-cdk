@@ -209,7 +209,7 @@ export interface DatadogFargateFirelensLoggingProps {
     /**
      * The image to use for the firelens logging container
      *
-     * @default ecs.ContainerImage.fromRegistry('public.ecr.aws/datadog/aws-for-fluent-bit:latest')
+     * @default ecs.ContainerImage.fromRegistry('public.ecr.aws/aws-observability/aws-for-fluent-bit:latest')
      */
     image?: ecs.ContainerImage;
     /**
@@ -279,7 +279,7 @@ export const addDatadogToFargateTask = (task: ecs.TaskDefinition, props: AddData
 
     if (props.agent?.enabled) {
         task.addContainer('datadog-agent', {
-            image: props.agent?.image ?? ecs.ContainerImage.fromRegistry(`public.ecr.aws/datadog/agent:${props.agent?.imageTag ?? 'latest'}`),
+            image: props.agent?.image ?? ecs.ContainerImage.fromRegistry(`public.ecr.aws/aws-observability/aws-for-fluent-bit:${props.agent?.imageTag ?? 'latest'}`),
             memoryLimitMiB: props.agent?.memoryLimitMiB ?? 256,
             ...(props.agent?.cpu
                 ? {
