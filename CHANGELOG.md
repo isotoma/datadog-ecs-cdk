@@ -2,7 +2,13 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [1.3.1](https://github.com/isotoma/datadog-ecs-cdk/compare/1.3.0...1.3.1)
+
+- Fix fluent-bit docker image [`#11`](https://github.com/isotoma/datadog-ecs-cdk/pull/11)
+
 #### [1.3.0](https://github.com/isotoma/datadog-ecs-cdk/compare/1.2.0...1.3.0)
+
+> 21 December 2023
 
 - More props for the EC2 construct [`#10`](https://github.com/isotoma/datadog-ecs-cdk/pull/10)
 - Allow ECS secret for EC2 construct [`#9`](https://github.com/isotoma/datadog-ecs-cdk/pull/9)
