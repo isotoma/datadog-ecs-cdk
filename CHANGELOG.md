@@ -2,7 +2,14 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [1.1.1](https://github.com/isotoma/datadog-ecs-cdk/compare/1.1.0...1.1.1)
+
+- Simplify GitHub actions [`#3`](https://github.com/isotoma/datadog-ecs-cdk/pull/3)
+- Add docs [`#2`](https://github.com/isotoma/datadog-ecs-cdk/pull/2)
+
 #### [1.1.0](https://github.com/isotoma/datadog-ecs-cdk/compare/1.0.0...1.1.0)
+
+> 21 December 2023
 
 - Support adding Datadog to Fargate tasks [`#1`](https://github.com/isotoma/datadog-ecs-cdk/pull/1)
 
