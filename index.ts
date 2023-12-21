@@ -4,13 +4,44 @@ import * as cdk from 'aws-cdk-lib';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 import type * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 
+// Comments are to match tsdoc formatting
 export interface EcsDatadogDaemonServiceProps {
+    /**
+     * The ECS cluster to deploy the Datadog agent to
+     */
     readonly ecsCluster: ecs.Cluster;
+    /**
+     * The secret containing the Datadog API key
+     *
+     * @remarks
+     * The secret must be a single value, not key-value pairs.
+     */
     readonly datadogApiKeySecret: secretsmanager.ISecret;
+    /**
+     * The Datadog site to send data to
+     *
+     * @remarks
+     * Defaults to datadoghq.com See information about other
+     * datadog site parameters at
+     * https://docs.datadoghq.com/getting_started/site/#access-the-datadog-site
+     */
     readonly datadogSite?: string;
+    /**
+     * Whether logging should be disabled
+     */
     readonly logsDisabled?: boolean;
 }
 
+/**
+ * Deploys the Datadog agent as a daemon service to an ECS cluster.
+ *
+ * @remarks
+ *
+ * This construct is intended to be used with an ECS cluster makes use
+ * of EC2 instances. It is not intended to be used with an ECS cluster
+ * that only runs Fargate tasks. See addDatadogToFargateTask for retrieving
+ * logs and metrics from Fargate tasks.
+ */
 export class EcsDatadogDaemonService extends Construct {
     constructor(scope: Construct, id: string, props: EcsDatadogDaemonServiceProps) {
         super(scope, id);
@@ -130,78 +161,255 @@ export class EcsDatadogDaemonService extends Construct {
     }
 }
 
+export interface DatadogFargateApmApplicationEnvVarsProps {
+    /**
+     * Whether to skip setting the environment variables
+     * in the other containers in the task.
+
+     * @remarks
+     * By default, the other containers will have the default
+     * environment variables set to allow sending traces
+     * to the APM.
+     *
+     * @default false
+     */
+    doNotSet?: boolean;
+    /**
+     * The name of the environment variable to set to the
+     * host of the Datadog agent
+     *
+     * @default DD_AGENT_HOST
+     */
+    apmHostEnvVarName?: string;
+    /**
+     * The name of the environment variable to set to the
+     * port of the Datadog agent
+     *
+     * @default DD_TRACE_AGENT_PORT
+     */
+    apmPortEnvVarName?: string;
+    /**
+     * The name of the environment variable to set to enable
+     * tracing in the application
+     *
+     * @default DD_TRACE_ENABLED
+     */
+    apmTraceEnabledEnvVarName?: string;
+}
+
+export interface DatadogFargateApmProps {
+    /**
+     * Whether the Datadog APM should be enabled within the agent
+     *
+     * @default false
+     */
+    enabled?: boolean;
+    /**
+     * Port on which the APM will listen for traces
+     *
+     * @default 8126
+     */
+    port?: number;
+    applicationEnvVars?: DatadogFargateApmApplicationEnvVarsProps;
+}
+
+export interface DatadogFargateStatsdApplicationEnvVarsProps {
+    /**
+     * Whether to skip setting the environment variables
+     * in the other containers in the task.
+     *
+     * @remarks
+     * By default, the other containers will have the default
+     * environment variables set to allow sending metrics
+     * to the StatsD server.
+     *
+     * @default false
+     */
+    doNotSet?: boolean;
+    /**
+     * The name of the environment variable to set to the
+     * host of the Datadog agent
+     *
+     * @default STATSD_HOST
+     */
+    statsdHostEnvVarName?: string;
+    /**
+     * The name of the environment variable to set to the
+     * port of the Datadog agent
+     *
+     * @default STATSD_PORT
+     */
+    statsdPortEnvVarName?: string;
+}
+
+export interface DatadogFargateStatsdProps {
+    /**
+     * Whether the Datadog StatsD server should be enabled within the agent
+     *
+     * @default false
+     */
+    enabled?: boolean;
+    /**
+     * Port on which the StatsD server will listen for metrics
+     *
+     * @default 8125
+     */
+    port?: number;
+    applicationEnvVars?: DatadogFargateStatsdApplicationEnvVarsProps;
+}
+
+export interface DatadogFargateAgentProps {
+    /**
+     * Whether the Datadog agent should be enabled
+     *
+     * @remarks
+     * If this is not enabled, the agent will not be deployed to
+     * the task. This is useful if you only want to use the
+     * firelens logging configuration.
+     *
+     * @default false
+     */
+    enabled?: boolean;
+    /**
+     * The image to use for the Datadog agent
+     *
+     * @remarks
+     * This is useful if you want to use a custom image for the
+     * Datadog agent.
+     *
+     * @default ecs.ContainerImage.fromRegistry('public.ecr.aws/datadog/agent:latest')
+     */
+    image?: ecs.ContainerImage;
+    /**
+     * The tag to use for the Datadog agent image
+     *
+     * @remarks
+     * This is useful if you want to use a custom image for the
+     * Datadog agent. This will be ignored if setting `image`.
+     *
+     * @default latest
+     */
+    imageTag?: string;
+    /**
+     * The memory limit for the Datadog agent container
+     *
+     * @default 256
+     */
+    memoryLimitMiB?: number;
+    /*
+     * The CPU units to reserve for the Datadog agent container
+     *
+     * @default
+     */
+    cpu?: number;
+    /**
+     * Whether the Datadog agent should log to CloudWatch.
+     *
+     * @remarks
+     * If this is enabled, the Datadog agent will log its
+     * own output to CloudWatch. This is useful if you want to see
+     * the logs to debug the Datadog agent.
+     *
+     * @default false
+     */
+    logToCloudWatch?: boolean;
+    apm?: DatadogFargateApmProps;
+    statsd?: DatadogFargateStatsdProps;
+}
+
+export interface DatadogFargateFirelensLoggingProps {
+    /**
+     * Whether the firelens logging configuration should be enabled
+     *
+     * @remarks
+     * If this is not enabled, the firelens logging configuration
+     * will not be deployed to the task. This is useful if you
+     * only want to use the Datadog agent.
+     *
+     * @default false
+     */
+    enabled?: boolean;
+    /**
+     * The service name to include in the logs sent to Datadog
+     *
+     * @remarks
+     * By default, this will be unset and the logs will be sent without
+     * a service tag.
+     */
+    service?: string;
+    /**
+     * The source name to include in the logs sent to Datadog
+     *
+     * @remarks
+     * By default, this will be unset and the logs will be sent without
+     * a source tag.
+     */
+    source?: string;
+    /**
+     * Any additional tags to include in the logs sent to Datadog
+     *
+     * @remarks
+     * By default, this will be unset and the logs will be sent without
+     * any additional tags.
+     */
+    tags?: Record<string, string>;
+    /**
+     * The memory limit for the firelens logging container
+     *
+     * @default 256
+     */
+    memoryLimitMiB?: number;
+    /**
+     * The CPU units to reserve for the firelens logging container
+     *
+     * @remarks
+     * By default, this will be unset and the firelens logging
+     * container will be able to use all available CPU units.
+     */
+    cpu?: number;
+    /**
+     * The image to use for the firelens logging container
+     *
+     * @default ecs.ContainerImage.fromRegistry('public.ecr.aws/datadog/aws-for-fluent-bit:latest')
+     */
+    image?: ecs.ContainerImage;
+    /**
+     * The tag to use for the firelens logging container image
+     *
+     * @remarks
+     * This is ignored if setting `image`.
+     * @default latest
+     */
+    imageTag?: string;
+}
+
 export interface AddDatadogToFargateTaskProps {
-    // Note: it is important that the value specified by this secret
-    // doesn't have a newline at the end. Otherwise, the firelens
-    // logging configuration will fail to send logs to Datadog. This
-    // is an easy mistake to introduce when the source for the secret
-    // is a secretsmanager Secret containing a single value, rather
-    // than key-value pairs.
+    /**
+     * The secret containing the Datadog API key
+     *
+     * @remarks
+     * It is important that the value specified by this secret
+     * doesn't have a newline at the end. Otherwise, the firelens
+     * logging configuration will fail to send logs to Datadog. This
+     * is an easy mistake to introduce when the source for the secret
+     * is a secretsmanager Secret containing a single value, rather
+     * than key-value pairs.
+     */
     datadogApiKeySecret: ecs.Secret;
-    // Defaults to datadoghq.com
+    /**
+     * The Datadog site to send data to
+     *
+     * @remarks
+     * Defaults to datadoghq.com See information about other
+     * datadog site parameters at
+     * https://docs.datadoghq.com/getting_started/site/#access-the-datadog-site
+     *
+     * @default datadoghq.com
+     */
     datadogSite?: string;
-    agent?: {
-        // Defaults to false
-        enabled?: boolean;
-        // Defaults to public.ecr.aws/datadog/agent:latest
-        image?: ecs.ContainerImage;
-        // Defaults to latest
-        imageTag?: string;
-        // Defaults to 256
-        memoryLimitMiB?: number;
-        // Defaults to unset
-        cpu?: number;
-        // Defaults to false
-        logToCloudWatch?: boolean;
-        apm?: {
-            // Defaults to false
-            enabled?: boolean;
-            // Defaults to 8126
-            port?: number;
-            applicationEnvVars?: {
-                // Defaults to false
-                doNotSet?: boolean;
-                // Defaults to DD_AGENT_HOST
-                apmHostEnvVarName?: string;
-                // Defaults to DD_TRACE_AGENT_PORT
-                apmPortEnvVarName?: string;
-                // Defaults to DD_TRACE_ENABLED
-                apmTraceEnabledEnvVarName?: string;
-            };
-        };
-        statsd?: {
-            // Defaults to false
-            enabled?: boolean;
-            // Defaults to 8125
-            port?: number;
-            applicationEnvVars?: {
-                // Defaults to false
-                doNotSet?: boolean;
-                // Defaults to STATSD_HOST
-                statsdHostEnvVarName?: string;
-                // Defaults to STATSD_PORT
-                statsdPortEnvVarName?: string;
-            };
-        };
-    };
-    fireLensLogging?: {
-        // Defaults to false
-        enabled?: boolean;
-        // Defaults to unset
-        service?: string;
-        // Defaults to unset
-        source?: string;
-        // Defaults to unset
-        tags?: Record<string, string>;
-        // Defaults to 256
-        memoryLimitMiB?: number;
-        // Defaults to unset
-        cpu?: number;
-        // Defaults to public.ecr.aws/datadog/aws-for-fluent-bit:latest
-        image?: ecs.ContainerImage;
-        // Defaults to latest
-        imageTag?: string;
-    };
+    agent?: DatadogFargateAgentProps;
+
+    fireLensLogging?: DatadogFargateFirelensLoggingProps;
 }
 
 const formatTags = (tags: Record<string, string>): string => {
@@ -212,6 +420,15 @@ const formatTags = (tags: Record<string, string>): string => {
     return formattedTags.join(',');
 };
 
+/**
+ * Adds the Datadog agent and firelens logging configuration to a Fargate task
+ *
+ * @remarks
+ * This is intended to be used with a Fargate task. It is not
+ * intended to be used with non-Fargate tasks. See
+ * EcsDatadogDaemonService for deploying the Datadog agent to an ECS
+ * cluster that makes use of EC2 instances.
+ */
 export const addDatadogToFargateTask = (task: ecs.TaskDefinition, props: AddDatadogToFargateTaskProps) => {
     const containerNames = [];
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
