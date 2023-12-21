@@ -25,10 +25,10 @@
         "clean": "rm -rf build/",
         "compile": "npm run clean && npm run -- tsc --outDir build/ && cp package.json README.md ./build/",
         "version": "auto-changelog --hide-credit -p && git add CHANGELOG.md",
-        "_lint": "eslint 'index.ts' 'test/**/*.ts' jest.config.js",
+        "_lint": "eslint '*.ts' 'test/**/*.ts' jest.config.js",
         "lint": "npm run -- _lint --fix",
         "lint-check": "npm run -- _lint --max-warnings 0",
-        "docs": "typedoc index.ts --includeVersion"
+        "docs": "typedoc ec2.ts fargate.ts --includeVersion"
     },
     "peerDependencies": {
         "aws-cdk-lib": "^2.0.0",
