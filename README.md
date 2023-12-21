@@ -15,7 +15,7 @@ import { EcsDatadogDaemonService } from 'datadog-ecs-cdk';
 
 new EcsDatadogDaemonService(this, 'EcsDatadog', {
     ecsCluster: myCluster,
-    datadogApiKeySecret: mySecret,
+    datadogApiKeySecret: ecs.Secret.fromSecretsManager(mySecret),
 });
 ```
 
