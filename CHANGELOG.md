@@ -2,7 +2,17 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [1.2.0](https://github.com/isotoma/datadog-ecs-cdk/compare/1.1.1...1.2.0)
+
+- Link to GitHub in README [`#8`](https://github.com/isotoma/datadog-ecs-cdk/pull/8)
+- Examples in README [`#6`](https://github.com/isotoma/datadog-ecs-cdk/pull/6)
+- Separate EC2 and Fargate [`#7`](https://github.com/isotoma/datadog-ecs-cdk/pull/7)
+- TSDoc formatted comments [`#5`](https://github.com/isotoma/datadog-ecs-cdk/pull/5)
+- Add links to README [`#4`](https://github.com/isotoma/datadog-ecs-cdk/pull/4)
+
 #### [1.1.1](https://github.com/isotoma/datadog-ecs-cdk/compare/1.1.0...1.1.1)
+
+> 21 December 2023
 
 - Simplify GitHub actions [`#3`](https://github.com/isotoma/datadog-ecs-cdk/pull/3)
 - Add docs [`#2`](https://github.com/isotoma/datadog-ecs-cdk/pull/2)
