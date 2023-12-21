@@ -9,13 +9,18 @@ Source: https://github.com/isotoma/datadog-ecs-cdk
 ## EC2 example
 
 ```typescript
-import { EcsDatadogDaemonService } from 'datadog-ecs-cdk';
+import { DatadogEcsDaemonService } from 'datadog-ecs-cdk';
 
 // ...
 
-new EcsDatadogDaemonService(this, 'EcsDatadog', {
+new DatadogEcsDaemonService(this, 'EcsDatadog', {
     ecsCluster: myCluster,
     datadogApiKeySecret: ecs.Secret.fromSecretsManager(mySecret),
+    // By default, when logs are enabled, collects logs from all containers,
+    // but not the Datadog agent container itself.
+    logs: {
+        enabled: true,
+    },
 });
 ```
 
