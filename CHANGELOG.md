@@ -2,7 +2,13 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [1.4.0](https://github.com/isotoma/datadog-ecs-cdk/compare/1.3.3...1.4.0)
+
+- Remove an awkward prop type option [`#16`](https://github.com/isotoma/datadog-ecs-cdk/pull/16)
+
 #### [1.3.3](https://github.com/isotoma/datadog-ecs-cdk/compare/1.3.2...1.3.3)
+
+> 21 December 2023
 
 - Fix README example [`#15`](https://github.com/isotoma/datadog-ecs-cdk/pull/15)
 
