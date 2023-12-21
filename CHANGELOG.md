@@ -2,7 +2,13 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [1.3.3](https://github.com/isotoma/datadog-ecs-cdk/compare/1.3.2...1.3.3)
+
+- Fix README example [`#15`](https://github.com/isotoma/datadog-ecs-cdk/pull/15)
+
 #### [1.3.2](https://github.com/isotoma/datadog-ecs-cdk/compare/1.3.1...1.3.2)
+
+> 21 December 2023
 
 - Fix Default behaviour for EC2 log collection [`#14`](https://github.com/isotoma/datadog-ecs-cdk/pull/14)
 - Fix images again [`#13`](https://github.com/isotoma/datadog-ecs-cdk/pull/13)
