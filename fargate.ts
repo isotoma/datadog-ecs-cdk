@@ -279,7 +279,7 @@ export const addDatadogToFargateTask = (task: ecs.TaskDefinition, props: AddData
 
     if (props.agent?.enabled) {
         task.addContainer('datadog-agent', {
-            image: props.agent?.image ?? ecs.ContainerImage.fromRegistry(`public.ecr.aws/aws-observability/aws-for-fluent-bit:${props.agent?.imageTag ?? 'latest'}`),
+            image: props.agent?.image ?? ecs.ContainerImage.fromRegistry(`public.ecr.aws/datadog/agent:${props.agent?.imageTag ?? 'latest'}`),
             memoryLimitMiB: props.agent?.memoryLimitMiB ?? 256,
             ...(props.agent?.cpu
                 ? {
@@ -342,7 +342,7 @@ export const addDatadogToFargateTask = (task: ecs.TaskDefinition, props: AddData
 
     if (props.fireLensLogging?.enabled) {
         task.addFirelensLogRouter('log_router', {
-            image: props.fireLensLogging?.image ?? ecs.ContainerImage.fromRegistry(`public.ecr.aws/datadog/aws-for-fluent-bit:${props.fireLensLogging?.imageTag ?? 'latest'}`),
+            image: props.fireLensLogging?.image ?? ecs.ContainerImage.fromRegistry(`public.ecr.aws/aws-observability/aws-for-fluent-bit:${props.fireLensLogging?.imageTag ?? 'latest'}`),
             memoryLimitMiB: props.fireLensLogging?.memoryLimitMiB ?? 256,
             ...(props.fireLensLogging?.cpu
                 ? {
