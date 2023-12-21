@@ -2,7 +2,6 @@ import { Construct } from 'constructs';
 
 import * as cdk from 'aws-cdk-lib';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
-import type * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 
 export interface DatadogEcsLogsProps {
     /**
@@ -32,14 +31,8 @@ export interface DatadogEcsDaemonServiceProps {
     readonly ecsCluster: ecs.Cluster;
     /**
      * The secret containing the Datadog API key
-     *
-     * @remarks
-     * Pass an ecs.Secret for full control over the source of
-     * this. Can pass an ISecret for backwards compatibility, though
-     * this must be a secret storing a single value, not key-value
-     * pairs.
      */
-    readonly datadogApiKeySecret: ecs.Secret | secretsmanager.ISecret;
+    readonly datadogApiKeySecret: ecs.Secret;
     /**
      * The Datadog site to send data to
      *
@@ -91,14 +84,6 @@ export interface DatadogEcsDaemonServiceProps {
     readonly disableHealthcheck?: boolean;
 }
 
-// Type-guard for ecs.Secret
-const isEcsSecret = (secret: secretsmanager.ISecret | ecs.Secret): secret is ecs.Secret => {
-    if (secret.hasOwnProperty('secretArn')) {
-        return false;
-    }
-    return true;
-};
-
 /**
  * Deploys the Datadog agent as a daemon service to an ECS cluster.
  *
@@ -143,7 +128,7 @@ export class DatadogEcsDaemonService extends Construct {
                     : {}),
             },
             secrets: {
-                DD_API_KEY: isEcsSecret(props.datadogApiKeySecret) ? props.datadogApiKeySecret : ecs.Secret.fromSecretsManager(props.datadogApiKeySecret),
+                DD_API_KEY: props.datadogApiKeySecret,
             },
             ...(props.disableHealthcheck
                 ? {}
