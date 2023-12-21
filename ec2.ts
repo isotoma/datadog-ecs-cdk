@@ -4,8 +4,28 @@ import * as cdk from 'aws-cdk-lib';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 import type * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 
-// Comments are to match tsdoc formatting
-export interface EcsDatadogDaemonServiceProps {
+export interface DatadogEcsLogsProps {
+    /**
+     * Whether logging should be enabled
+     *
+     * @default false
+     */
+    readonly enabled?: boolean;
+    /**
+     * Whether to collect from all containers
+     *
+     * @default true
+     */
+    readonly collectFromAllContainers?: boolean;
+    /**
+     * Collect logs from the agent container itself
+     *
+     * @default false
+     */
+    readonly collectFromAgentContainer?: boolean;
+}
+
+export interface DatadogEcsDaemonServiceProps {
     /**
      * The ECS cluster to deploy the Datadog agent to
      */
@@ -26,10 +46,46 @@ export interface EcsDatadogDaemonServiceProps {
      * https://docs.datadoghq.com/getting_started/site/#access-the-datadog-site
      */
     readonly datadogSite?: string;
+    readonly logs?: DatadogEcsLogsProps;
     /**
-     * Whether logging should be disabled
+     * The number of CPU units to reserve for the container
+     *
+     * @default 100
      */
-    readonly logsDisabled?: boolean;
+    readonly cpu?: number;
+    /**
+     * The amount (in MiB) of memory to present to the container
+     *
+     * @default 512
+     */
+    readonly memoryLimitMiB?: number;
+    /**
+     * The image to use for the container
+     *
+     * @default ecs.ContainerImage.fromRegistry('public.ecr.aws/datadog/agent:latest')
+     */
+    readonly image?: ecs.ContainerImage;
+    /**
+     * The image tag to use for the container
+     *
+     * @remarks
+     * This is ignored if `image` is specified
+     *
+     * @default 'latest'
+     */
+    readonly imageTag?: string;
+    /**
+     * Whether the agent's logs should be sent to CloudWatch
+     *
+     * @default false
+     */
+    readonly logToCloudWatch?: boolean;
+    /**
+     * Whether to disable the agent's healthcheck
+     *
+     * @default false
+     */
+    readonly disableHealthcheck?: boolean;
 }
 
 /**
@@ -42,8 +98,10 @@ export interface EcsDatadogDaemonServiceProps {
  * that only runs Fargate tasks. See addDatadogToFargateTask for retrieving
  * logs and metrics from Fargate tasks.
  */
-export class EcsDatadogDaemonService extends Construct {
-    constructor(scope: Construct, id: string, props: EcsDatadogDaemonServiceProps) {
+export class DatadogEcsDaemonService extends Construct {
+    readonly service: ecs.Ec2Service;
+
+    constructor(scope: Construct, id: string, props: DatadogEcsDaemonServiceProps) {
         super(scope, id);
 
         // To match as documented at
@@ -55,34 +113,46 @@ export class EcsDatadogDaemonService extends Construct {
         });
 
         const container = taskDefinition.addContainer('datadog-agent', {
-            image: ecs.ContainerImage.fromRegistry('public.ecr.aws/datadog/agent:latest'),
-            cpu: 100,
-            memoryLimitMiB: 512,
+            image: props.image ?? ecs.ContainerImage.fromRegistry(`public.ecr.aws/datadog/agent:${props.imageTag ?? 'latest'}`),
+            cpu: props.cpu ?? 100,
+            memoryLimitMiB: props.memoryLimitMiB ?? 512,
             essential: true,
             environment: {
                 DD_SITE: props.datadogSite ?? 'datadoghq.com',
-                ...(props.logsDisabled
-                    ? {}
-                    : {
+                ...(props.logs?.enabled
+                    ? {
                           DD_LOGS_ENABLED: 'true',
-                          DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL: 'true',
-                      }),
+                          DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL: props.logs.collectFromAllContainers ? 'true' : 'false',
+                          ...(!props.logs?.collectFromAgentContainer
+                              ? {
+                                    DD_CONTAINER_EXCLUDE: 'name:datadog-agent',
+                                }
+                              : {}),
+                      }
+                    : {}),
             },
             secrets: {
                 DD_API_KEY: ecs.Secret.fromSecretsManager(props.datadogApiKeySecret),
             },
-            healthCheck: {
-                command: ['CMD-SHELL', 'agent health'],
-                retries: 3,
-                timeout: cdk.Duration.seconds(5),
-                interval: cdk.Duration.seconds(10),
-                startPeriod: cdk.Duration.seconds(15),
-            },
-            logging: ecs.LogDrivers.awsLogs({
-                streamPrefix: 'datadog-agent',
-            }),
+            ...(props.disableHealthcheck
+                ? {}
+                : {
+                      healthCheck: {
+                          command: ['CMD-SHELL', 'agent health'],
+                          retries: 3,
+                          timeout: cdk.Duration.seconds(5),
+                          interval: cdk.Duration.seconds(10),
+                          startPeriod: cdk.Duration.seconds(15),
+                      },
+                  }),
+            ...(props.logToCloudWatch
+                ? {
+                      logging: ecs.LogDrivers.awsLogs({
+                          streamPrefix: 'datadog-agent',
+                      }),
+                  }
+                : {}),
         });
-
         container.addMountPoints(
             {
                 containerPath: '/var/run/docker.sock',
@@ -101,7 +171,7 @@ export class EcsDatadogDaemonService extends Construct {
             },
         );
 
-        if (!props.logsDisabled) {
+        if (props.logs?.enabled) {
             container.addMountPoints(
                 {
                     containerPath: '/opt/datadog-agent/run',
@@ -137,7 +207,7 @@ export class EcsDatadogDaemonService extends Construct {
             },
         });
 
-        if (!props.logsDisabled) {
+        if (props.logs?.enabled) {
             taskDefinition.addVolume({
                 name: 'pointdir',
                 host: {
@@ -153,7 +223,7 @@ export class EcsDatadogDaemonService extends Construct {
             });
         }
 
-        new ecs.Ec2Service(this, 'Service', {
+        this.service = new ecs.Ec2Service(this, 'Service', {
             cluster: props.ecsCluster,
             taskDefinition,
             daemon: true,
