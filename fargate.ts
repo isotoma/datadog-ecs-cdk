@@ -152,6 +152,14 @@ export interface DatadogFargateAgentProps {
      * @default false
      */
     logToCloudWatch?: boolean;
+    /**
+     * Any additional tags to include in the metrics sent to Datadog
+     *
+     * @remarks
+     * By default, this will be unset and the metrics will be sent without
+     * any additional tags.
+     */
+    tags?: Record<string, string>;
     apm?: DatadogFargateApmProps;
     statsd?: DatadogFargateStatsdProps;
 }
@@ -251,12 +259,12 @@ export interface AddDatadogToFargateTaskProps {
     fireLensLogging?: DatadogFargateFirelensLoggingProps;
 }
 
-const formatTags = (tags: Record<string, string>): string => {
+const formatTags = (tags: Record<string, string>, sep: string): string => {
     const formattedTags = [];
     for (const [key, value] of Object.entries(tags)) {
         formattedTags.push(`${key}:${value}`);
     }
-    return formattedTags.join(',');
+    return formattedTags.join(sep);
 };
 
 /**
@@ -312,6 +320,11 @@ export const addDatadogToFargateTask = (task: ecs.TaskDefinition, props: AddData
                     : {
                           DD_USE_DOGSTATSD: 'false',
                       }),
+                ...(props.agent?.tags
+                    ? {
+                          DD_TAGS: formatTags(props.agent?.tags, ' '),
+                      }
+                    : {}),
             },
             secrets: {
                 DD_API_KEY: props.datadogApiKeySecret,
@@ -376,7 +389,7 @@ export const addDatadogToFargateTask = (task: ecs.TaskDefinition, props: AddData
                     : {}),
                 ...(props.fireLensLogging?.tags
                     ? {
-                          dd_tags: formatTags(props.fireLensLogging?.tags),
+                          dd_tags: formatTags(props.fireLensLogging?.tags, ','),
                       }
                     : {}),
             },
