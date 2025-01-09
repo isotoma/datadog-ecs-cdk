@@ -42,8 +42,7 @@ export interface DatadogPrivateSyntheticsServiceProps {
     readonly memoryLimitMiB?: number;
 }
 
-abstract class  DatadogPrivateSyntheticsBaseService extends Construct {
-
+abstract class DatadogPrivateSyntheticsBaseService extends Construct {
     protected getAddContainerDefinitionOptions(props: DatadogPrivateSyntheticsServiceProps): ecs.ContainerDefinitionOptions {
         return {
             image: props.image ?? ecs.ContainerImage.fromRegistry(`datadog/synthetics-private-location-worker:${props.imageTag ?? 'latest'}`),
@@ -56,18 +55,11 @@ abstract class  DatadogPrivateSyntheticsBaseService extends Construct {
             },
             environment: {
                 DATADOG_SITE: props.datadogSite ?? 'datadoghq.com',
-            },                
-            command: [
-                `--locationID=${props.datadogLocationId}`,
-                `--publicKey.fingerprint=${props.datadogPublicKeyFingerprint}`,
-                '--enableStatusProbes',
-                '--statusProbesPort=8080',
-            ],
+            },
+            command: [`--locationID=${props.datadogLocationId}`, `--publicKey.fingerprint=${props.datadogPublicKeyFingerprint}`, '--enableStatusProbes', '--statusProbesPort=8080'],
             healthCheck: {
                 retries: 3,
-                command: [
-                    "CMD-SHELL", "wget -O /dev/null http://localhost:8080/liveness || exit 1"
-                ],
+                command: ['CMD-SHELL', 'wget -O /dev/null http://localhost:8080/liveness || exit 1'],
                 timeout: cdk.Duration.seconds(2),
                 interval: cdk.Duration.seconds(10),
                 startPeriod: cdk.Duration.seconds(30),
@@ -90,7 +82,7 @@ export class DatadogPrivateSyntheticsFargateService extends DatadogPrivateSynthe
             memoryLimitMiB: props.memoryLimitMiB ?? 512,
         });
 
-        const container = taskDefinition.addContainer('DatadogAgent', this.getAddContainerDefinitionOptions(props));
+        taskDefinition.addContainer('DatadogAgent', this.getAddContainerDefinitionOptions(props));
 
         this.service = new ecs.FargateService(this, 'Service', {
             cluster: props.ecsCluster,
@@ -105,12 +97,15 @@ export class DatadogPrivateSyntheticsEc2Service extends DatadogPrivateSynthetics
     constructor(scope: Construct, id: string, props: DatadogPrivateSyntheticsServiceProps) {
         super(scope, id);
 
-        const taskDefinition = new ecs.Ec2TaskDefinition(this, 'TaskDefinition', {
+        const taskDefinition = new ecs.Ec2TaskDefinition(this, 'TaskDefinition');
+
+        const containerProps = this.getAddContainerDefinitionOptions(props);
+
+        taskDefinition.addContainer('DatadogAgent', {
+            ...containerProps,
             cpu: props.cpu ?? 256,
             memoryLimitMiB: props.memoryLimitMiB ?? 512,
         });
-
-        const container = taskDefinition.addContainer('DatadogAgent', this.getAddContainerDefinitionOptions(props));
 
         this.service = new ecs.Ec2Service(this, 'Service', {
             cluster: props.ecsCluster,
@@ -118,4 +113,3 @@ export class DatadogPrivateSyntheticsEc2Service extends DatadogPrivateSynthetics
         });
     }
 }
-    
