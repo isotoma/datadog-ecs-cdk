@@ -1,0 +1,25 @@
+{
+    "[typescript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[javascript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[json]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "eslint.lintTask.enable": true,
+    "editor.codeActionsOnSave": {
+        // fix eslint issues on save
+        "source.fixAll.eslint": "always",
+        // organise imports on save
+        "source.organizeImports": "always"
+    },
+    "editor.formatOnType": false, // required
+    "editor.formatOnPaste": true, // optional
+    // "editor.formatOnSave": true, // optional
+    "editor.formatOnSaveMode": "file", // required to format on save
+    "files.autoSave": "onFocusChange", // optional but recommended
+    "json.format.keepLines": true,
+    "typescript.tsdk": "node_modules/typescript/lib",
+}
