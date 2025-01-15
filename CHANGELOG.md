@@ -2,7 +2,13 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [1.6.0](https://github.com/isotoma/datadog-ecs-cdk/compare/1.5.0...1.6.0)
+
+- Private synthetics [`#19`](https://github.com/isotoma/datadog-ecs-cdk/pull/19)
+
 #### [1.5.0](https://github.com/isotoma/datadog-ecs-cdk/compare/1.4.0...1.5.0)
+
+> 10 January 2024
 
 - Additional tags for Fargate metrics [`#17`](https://github.com/isotoma/datadog-ecs-cdk/pull/17)
 
